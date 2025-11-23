@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Spinner - Guess Indian States</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #d4a574 0%, #8b6f47 50%, #c9a88a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background blobs */
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            mix-blend-mode: multiply;
+            animation: blob 7s infinite;
+        }
+
+        .blob-1 {
+            top: 0;
+            left: 0;
+            width: 400px;
+            height: 400px;
+            background: #8b6f47;
+        }
+
+        .blob-2 {
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 400px;
+            background: #d4a574;
+            animation-delay: 2s;
+        }
+
+        .blob-3 {
+            bottom: 0;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            background: #a67c52;
+            animation-delay: 4s;
+        }
+
+        @keyframes blob {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #eabb8d, #eae6e2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        /* Score display */
+        .score-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .score-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px 40px;
+        }
+
+        .score-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .streak-value {
+            background: linear-gradient(135deg, #d4a574, #a67c52);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Game area */
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 40px;
+            margin-top: 20px;
+        }
+
+        /* Start button */
+        .start-button {
+            font-family: 'Poppins', sans-serif;
+            padding: 25px 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #8b6f47, #a67c52, #d4a574);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(139, 111, 71, 0.5);
+        }
+
+        /* Spinning wheel */
+        .wheel-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+        }
+
+        .wheel {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+
+        .wheel-glow {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #8b6f47, #a67c52, #d4a574);
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.8; }
+        }
+
+        .wheel-disc {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .wheel-disc.spinning {
+            animation: spin-wheel 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes spin-wheel {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(1080deg); }
+        }
+
+        .wheel-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 50% 0, 100% 0);
+            transform-origin: center;
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #8b6f47, #a67c52);
+            border-radius: 50%;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border: 5px solid white;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid white;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+            z-index: 10;
+        }
+
+        /* Timer */
+        .timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 15px 30px;
+            margin-bottom: 30px;
+        }
+
+        .timer.warning {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            animation: pulse-warning 1s infinite;
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .timer-icon {
+            font-size: 1.5rem;
+        }
+
+        .timer-value {
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            min-width: 60px;
+        }
+
+        .timer.warning .timer-value,
+        .timer.warning .timer-icon {
+            color: #fca5a5;
+        }
+
+        /* Clues */
+        .clues {
+            margin-bottom: 30px;
+        }
+
+        .clues-title {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .clue {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+
+        .clue:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .clue-number {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #8b6f47, #a67c52);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .clue-text {
+            color: white;
+            font-size: 1.1rem;
+            text-align: left;
+            flex: 1;
+        }
+
+        /* Input */
+        .guess-input {
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            color: white;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .guess-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .guess-input:focus {
+            outline: none;
+            border-color: #8b6f47;
+            box-shadow: 0 0 20px rgba(139, 111, 71, 0.5);
+        }
+
+        .submit-button {
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #8b6f47, #a67c52);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(139, 111, 71, 0.5);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Result */
+        .result {
+            text-align: center;
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-text {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .result-answer {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .correct {
+            color: #4ade80;
+        }
+
+        .wrong {
+            color: #f87171;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .score-box {
+                padding: 15px 25px;
+            }
+
+            .game-area {
+                padding: 25px;
+            }
+
+            .wheel {
+                width: 250px;
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
+
+    <div class="container">
+        <h1>State Spinner</h1>
+        <p class="subtitle">Spin the wheel, guess the Indian state!</p>
+
+        <div class="score-container">
+            <div class="score-box">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-box">
+                <div class="score-label">Streak</div>
+                <div class="score-value streak-value" id="streak">—</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <button class="start-button" id="startButton">Spin the Wheel!</button>
+        </div>
+    </div>
+
+    <script>
+        const states = [
+            {"name": "Punjab", "clue_1": "Famous for bhangra dance and dhol drums", "clue_2": "Known as the land of five rivers", "clue_3": "Golden Temple is located here"},
+            {"name": "Kerala", "clue_1": "Known as God's Own Country", "clue_2": "Famous for backwaters and houseboats", "clue_3": "Kathakali dance originated here"},
+            {"name": "Rajasthan", "clue_1": "Land of kings and desert forts", "clue_2": "Famous for colorful turbans and folk music", "clue_3": "Hawa Mahal and City Palace are iconic landmarks"},
+            {"name": "Goa", "clue_1": "Smallest state famous for beaches", "clue_2": "Portuguese influenced architecture and cuisine", "clue_3": "Carnival celebrations are very popular"},
+            {"name": "Tamil Nadu", "clue_1": "Bharatanatyam classical dance originated here", "clue_2": "Famous for ancient temples with tall gopurams", "clue_3": "Marina Beach is a popular destination"},
+            {"name": "Maharashtra", "clue_1": "Home to Bollywood film industry", "clue_2": "Gateway of India is an iconic monument", "clue_3": "Ganesh Chaturthi is celebrated grandly"},
+            {"name": "West Bengal", "clue_1": "Rabindranath Tagore was born here", "clue_2": "Famous for Durga Puja celebrations", "clue_3": "Rosogolla and mishti doi are popular sweets"},
+            {"name": "Gujarat", "clue_1": "Birthplace of Mahatma Gandhi", "clue_2": "Famous for Navratri and Garba dance", "clue_3": "Known for vegetarian cuisine and dhokla"},
+            {"name": "Karnataka", "clue_1": "IT hub known as Silicon Valley of India", "clue_2": "Mysore Palace is a famous landmark", "clue_3": "Classical music and Yakshagana theater are popular"},
+            {"name": "Uttarakhand", "clue_1": "Known as Dev Bhoomi or Land of Gods", "clue_2": "Himalayan mountain state with Ganga origin", "clue_3": "Char Dham pilgrimage sites are located here"},
+            {"name": "Himachal Pradesh", "clue_1": "Popular hill station destination", "clue_2": "Known for apple orchards and snow-capped mountains", "clue_3": "Shimla and Manali are famous tourist spots"},
+            {"name": "Jammu and Kashmir", "clue_1": "Called Paradise on Earth", "clue_2": "Famous for Dal Lake and houseboats", "clue_3": "Saffron cultivation and Pashmina shawls"},
+            {"name": "Uttar Pradesh", "clue_1": "Taj Mahal is located here", "clue_2": "Most populous state in India", "clue_3": "Varanasi is one of the oldest living cities"},
+            {"name": "Madhya Pradesh", "clue_1": "Heart of India with central location", "clue_2": "Khajuraho temples are UNESCO World Heritage sites", "clue_3": "Known for tiger reserves and forests"},
+            {"name": "Bihar", "clue_1": "Birthplace of Buddhism and Mahabodhi Temple", "clue_2": "Ancient Nalanda University was located here", "clue_3": "Chhath Puja is celebrated with great devotion"},
+            {"name": "Odisha", "clue_1": "Jagannath Temple and Rath Yatra are famous", "clue_2": "Known for Odissi classical dance", "clue_3": "Konark Sun Temple is a UNESCO site"},
+            {"name": "Assam", "clue_1": "Famous for tea gardens and one-horned rhinos", "clue_2": "Bihu festival is celebrated with joy", "clue_3": "Kaziranga National Park is located here"},
+            {"name": "Haryana", "clue_1": "Surrounds the national capital on three sides", "clue_2": "Known for wrestling and sports culture", "clue_3": "Kurukshetra is mentioned in Mahabharata"},
+            {"name": "Chhattisgarh", "clue_1": "Known for rich mineral resources", "clue_2": "Tribal culture and handicrafts are prominent", "clue_3": "Chitrakote Falls is called Niagara of India"},
+            {"name": "Jharkhand", "clue_1": "Known for waterfalls and mineral wealth", "clue_2": "Tribal festivals and handicrafts are popular", "clue_3": "Ranchi is called City of Waterfalls"},
+            {"name": "Andhra Pradesh", "clue_1": "Famous for Tirupati Balaji Temple", "clue_2": "Kuchipudi classical dance originated here", "clue_3": "Known for spicy Andhra cuisine"},
+            {"name": "Telangana", "clue_1": "Youngest state formed in 2014", "clue_2": "Charminar is an iconic monument", "clue_3": "Hyderabad is known as City of Pearls"},
+            {"name": "Arunachal Pradesh", "clue_1": "Land of the rising sun in India", "clue_2": "Eastern Himalayan state with diverse tribes", "clue_3": "Tawang Monastery is a famous Buddhist site"},
+            {"name": "Meghalaya", "clue_1": "Known as abode of clouds", "clue_2": "Wettest place on earth Cherrapunji is here", "clue_3": "Living root bridges are unique natural wonders"},
+            {"name": "Manipur", "clue_1": "Known for Manipuri classical dance", "clue_2": "Loktak Lake has floating phumdis", "clue_3": "Called Jewel of India"},
+            {"name": "Mizoram", "clue_1": "Known for bamboo forests and handicrafts", "clue_2": "Cheraw bamboo dance is popular", "clue_3": "Predominantly Christian population"},
+            {"name": "Nagaland", "clue_1": "Land of festivals with Hornbill Festival", "clue_2": "Naga tribes have rich warrior traditions", "clue_3": "Known for vibrant shawls and handicrafts"},
+            {"name": "Tripura", "clue_1": "Known for Ujjayanta Palace", "clue_2": "Tripura Sundari Temple is famous", "clue_3": "Bamboo and cane handicrafts are popular"},
+            {"name": "Sikkim", "clue_1": "Only state with organic farming certification", "clue_2": "Kanchenjunga third highest peak is here", "clue_3": "Famous for Buddhist monasteries"}
+        ];
+
+        let score = 0;
+        let consecutiveCorrect = 0;
+        let currentState = null;
+        let timeLeft = 20;
+        let timerInterval = null;
+
+        const gameArea = document.getElementById('gameArea');
+        const startButton = document.getElementById('startButton');
+        const scoreDisplay = document.getElementById('score');
+        const streakDisplay = document.getElementById('streak');
+
+        startButton.addEventListener('click', startGame);
+
+        function startGame() {
+            gameArea.innerHTML = createWheelHTML();
+            
+            setTimeout(() => {
+                currentState = states[Math.floor(Math.random() * states.length)];
+                showGamePlay();
+            }, 3000);
+        }
+
+        function createWheelHTML() {
+            const colors = [
+                'linear-gradient(135deg, #ef4444, #dc2626)',
+                'linear-gradient(135deg, #f97316, #ea580c)',
+                'linear-gradient(135deg, #eab308, #ca8a04)',
+                'linear-gradient(135deg, #22c55e, #16a34a)',
+                'linear-gradient(135deg, #06b6d4, #0891b2)',
+                'linear-gradient(135deg, #3b82f6, #2563eb)',
+                'linear-gradient(135deg, #6366f1, #4f46e5)',
+                'linear-gradient(135deg, #a855f7, #9333ea)',
+                'linear-gradient(135deg, #ec4899, #db2777)'
+            ];
+
+            let segments = '';
+            colors.forEach((color, i) => {
+                const rotation = i * 40;
+                segments += `<div class="wheel-segment" style="background: ${color}; transform: rotate(${rotation}deg);"></div>`;
+            });
+
+            return `
+                <div class="wheel-container">
+                    <div class="wheel">
+                        <div class="wheel-glow"></div>
+                        <div class="wheel-disc spinning">
+                            ${segments}
+                            <div class="wheel-center"></div>
+                        </div>
+                        <div class="wheel-pointer"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showGamePlay() {
+            timeLeft = 20;
+            gameArea.innerHTML = `
+                <div class="timer" id="timer">
+                    <span class="timer-icon">⏱️</span>
+                    <span class="timer-value" id="timerValue">20s</span>
+                </div>
+
+                <div class="clues">
+                    <h2 class="clues-title">Cultural Clues</h2>
+                    <div class="clue">
+                        <div class="clue-number">1</div>
+                        <div class="clue-text">${currentState.clue_1}</div>
+                    </div>
+                    <div class="clue">
+                        <div class="clue-number">2</div>
+                        <div class="clue-text">${currentState.clue_2}</div>
+                    </div>
+                    <div class="clue">
+                        <div class="clue-number">3</div>
+                        <div class="clue-text">${currentState.clue_3}</div>
+                    </div>
+                </div>
+
+                <form id="guessForm">
+                    <input 
+                        type="text" 
+                        class="guess-input" 
+                        id="guessInput" 
+                        placeholder="Enter your guess..."
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="submit-button">Submit Guess</button>
+                </form>
+            `;
+
+            document.getElementById('guessInput').focus();
+            document.getElementById('guessForm').addEventListener('submit', handleGuess);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showResult(false);
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const timerValue = document.getElementById('timerValue');
+            const timer = document.getElementById('timer');
+            
+            timerValue.textContent = `${timeLeft}s`;
+            
+            if (timeLeft <= 5) {
+                timer.classList.add('warning');
+            }
+        }
+
+        function handleGuess(e) {
+            e.preventDefault();
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            const guess = document.getElementById('guessInput').value.trim();
+            const correct = guess.toLowerCase() === currentState.name.toLowerCase();
+            
+            showResult(correct);
+        }
+
+        function showResult(correct) {
+            if (correct) {
+                score++;
+                consecutiveCorrect++;
+            } else {
+                consecutiveCorrect = 0;
+            }
+
+            const streak = Math.floor(consecutiveCorrect / 3);
+
+            scoreDisplay.textContent = score;
+            streakDisplay.textContent = streak > 0 ? `🔥 ${streak}` : '—';
+
+            gameArea.innerHTML = `
+                <div class="result">
+                    <div class="result-icon ${correct ? 'correct' : 'wrong'}">
+                        ${correct ? '✓' : '✗'}
+                    </div>
+                    <div class="result-text ${correct ? 'correct' : 'wrong'}">
+                        ${correct ? 'Correct Answer!' : 'Wrong Answer!'}
+                    </div>
+                    <div class="result-answer">
+                        The answer was <strong>${currentState.name}</strong>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                gameArea.innerHTML = '<button class="start-button" id="startButton">Spin Again!</button>';
+                document.getElementById('startButton').addEventListener('click', startGame);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
